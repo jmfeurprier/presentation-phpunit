@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="help">
+
+    <property name="rootdir" value="${project.basedir}/" override="true" />
+    <property name="bindir" value="${rootdir}vendor/bin/" override="false" />
+
+    <target name="help" description="Shows available target">
+        <exec executable="${bindir}phing" passthru="true">
+            <arg value="-l"/>
+        </exec>
+    </target>
+
+    <target name="codecheck" depends="lint,phpunit,phpcs,phpmd,phpcpd" description="Runs code-related targets (lint, phpunit, etc)"/>
+
+    <target name="lint" description="Performs syntax check of sourcecode files">
+        <phplint haltonfailure="true">
+            <fileset dir="${rootdir}src/">
+                <include name="**/*.php"/>
+            </fileset>
+        </phplint>
+    </target>
+
+    <target name="phpunit" description="Runs unit tests with PHPUnit">
+        <exec executable="${bindir}phpunit" passthru="true">
+            <arg value="-c"/>
+            <arg value="${rootdir}phpunit.xml"/>
+            <arg value="--verbose"/>
+        </exec>
+    </target>
+
+    <target name="phpcs" description="Finds coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
+        <exec executable="${bindir}phpcs" passthru="true">
+            <arg value="-p"/>
+            <arg value="--extensions=php"/>
+            <arg value="--ignore=*/templates/*"/>
+            <arg value="--standard=PSR2"/>
+            <arg value="--report=full"/>
+            <arg path="${rootdir}src/"/>
+        </exec>
+    </target>
+
+    <target name="phpmd" description="Performs project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
+        <exec executable="${bindir}phpmd" passthru="true">
+            <arg path="${rootdir}src/"/>
+            <arg value="text"/>
+            <arg value="codesize,unusedcode,design"/>
+            <arg value="--suffixes=.php"/>
+        </exec>
+    </target>
+
+    <target name="phpcpd" description="Finds duplicate code using PHPCPD">
+        <exec executable="${bindir}phpcpd" passthru="true">
+            <arg value="--min-lines"/>
+            <arg value="7"/>
+            <arg value="--min-tokens"/>
+            <arg value="65"/>
+            <arg path="${rootdir}src/"/>
+        </exec>
+    </target>
+
+    <target name="coverage" description="Runs code coverage with PHPUnit">
+        <if>
+            <available file="${rootdir}build/coverage/" type="dir" />
+            <then>
+                <delete dir="${rootdir}build/coverage/" />
+            </then>
+        </if>
+        <mkdir dir="${rootdir}build/coverage/" />
+        <exec executable="${bindir}phpunit" passthru="true">
+            <arg value="--coverage-html"/>
+            <arg value="${rootdir}build/coverage/"/>
+            <arg value="-c"/>
+            <arg value="${rootdir}phpunit.xml"/>
+        </exec>
+    </target>
+
+</project>
